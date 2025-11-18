@@ -28,16 +28,6 @@ The model is trained to recognize the relationship between how Bengali words sou
 
 ### Python Dependencies
 ```bash
-torch
-torchaudio
-transformers
-librosa
-numpy
-scikit-learn
-```
-
-Install with:
-```bash
 pip install -r requirements.txt
 ```
 
@@ -56,12 +46,13 @@ KWDB/
 ├── train.py            # Training script
 ├── predict.py          # Prediction script
 ├── requirements.txt    # Python dependencies
+├── config.yaml         # Training configuration
 └── README.md          # This file
 ```
 
 ## Setting Up Your Data
 
-The model expects training data in a text file named `bangla_data.txt` with the following format:
+The model expects training data in a text file with the following format:
 
 ```
 /path/to/audio1.wav|word_to_spot|label
@@ -82,41 +73,47 @@ audio/speech3.wav|ধন্যবাদ|1
 
 ## Training the Model
 
-1. **Prepare Your Data**: Create a `bangla_data.txt` file with your training data in the format described above.
+1. **Prepare Your Data**: Create a training file (e.g., `train.txt`) and optionally a validation file (e.g., `val.txt`) in the format described above.
 
-2. **Run Training**:
+2. **Configure Training**: Edit the `config.yaml` file to set the training parameters:
+```yaml
+train_data: 'train.txt'
+val_data: 'val.txt'
+model_path: 'bangla_kws_model.pth'
+lr: 0.0001
+batch_size: 8
+epochs: 10
+```
+
+3. **Run Training**:
 ```bash
-python train.py
+python train.py --config config.yaml
+```
+You can also override the settings in the config file with command-line arguments:
+```bash
+python train.py --config config.yaml --lr 1e-5
 ```
 
 The training process will:
-- Load your audio-text pairs from `bangla_data.txt`
-- Train only the classification layer (the pre-trained encoders remain frozen)
-- Save the trained model as `bangla_kws_model.pth`
-
-### Training Details
-- Only the classifier parameters are updated during training
-- The pre-trained audio and text encoders are frozen
-- Uses AdamW optimizer with learning rate 1e-4
-- Uses Binary Cross-Entropy loss for the binary classification task
+- Load your audio-text pairs.
+- Train only the classification layer (the pre-trained encoders remain frozen).
+- If a validation set is provided, it will evaluate and print metrics (Accuracy, Precision, Recall, F1-score) after each epoch.
+- Save the trained model.
 
 ## Using the Trained Model for Prediction
 
 After training, you can use the model to detect keywords in new audio files:
 
 ```bash
-python predict.py
+python predict.py --audio_file test_audio.wav --keyword হ্যালো --model_path bangla_kws_model.pth
 ```
 
-The script will prompt you to enter:
-1. Path to the audio file you want to analyze
-2. The Bengali keyword you're looking for
+### Prediction Arguments
+- `--audio_file`: Path to the audio file you want to analyze.
+- `--keyword`: The Bengali keyword you're looking for.
+- `--model_path`: Path to the trained model (default: `bangla_kws_model.pth`).
+- `--threshold`: Threshold for classification (default: `0.5`).
 
-### Example Usage:
-```bash
-Enter the path to the audio file: test_audio.wav
-Enter the keyword to detect: হ্যালো
-```
 
 The output will show:
 - Logit score (raw output from the model)
@@ -170,39 +167,17 @@ The `BanglaKeywordSpotter` model consists of:
    - Dropout: 30% for regularization
    - Output: 1 neuron (for binary classification)
 
-## Customization Options
-
-### Changing the Threshold
-In `predict.py`, you can adjust the classification threshold:
-```python
-logit, probability, prediction = predict_keyword(audio_file, keyword, model, threshold=0.3)  # Lower threshold = more sensitive
-```
-
-### Adjusting Training Parameters
-In `train.py`, you can modify:
-- Batch size in the DataLoader
-- Number of epochs
-- Learning rate in the optimizer
-- Loss function if needed
-
-## Expected Performance
-
-This model is optimized for:
-- Detecting specific Bengali keywords in audio recordings
-- Working with clear audio (works best with good quality recordings)
-- Processing audio with a sampling rate of 16kHz (though it can handle other rates)
-
 ## Troubleshooting
 
 ### Common Issues:
 
-1. **Memory Errors**: Try reducing the batch size in `train.py`
-2. **Audio Loading Issues**: Ensure audio files are in common formats (WAV, MP3, etc.)
-3. **Model Loading Errors**: Check that the model file `bangla_kws_model.pth` exists
-4. **Unicode Issues with Bengali Text**: The code handles UTF-8 encoding properly
+1. **Memory Errors**: Try reducing the batch size.
+2. **Audio Loading Issues**: Ensure audio files are in common formats (WAV, MP3, etc.).
+3. **Model Loading Errors**: Check that the model file exists.
+4. **Unicode Issues with Bengali Text**: The code handles UTF-8 encoding properly.
 
 ### Model File Size
-The saved model (`bangla_kws_model.pth`) only contains the classifier weights, not the pre-trained encoders, so it should be relatively small.
+The saved model only contains the classifier weights, not the pre-trained encoders, so it should be relatively small.
 
 ## Use Cases
 

@@ -1,0 +1,6 @@
+train_data: 'bangla_data.txt'
+val_data: null
+model_path: 'bangla_kws_model.pth'
+lr: 0.0001
+batch_size: 8
+epochs: 10

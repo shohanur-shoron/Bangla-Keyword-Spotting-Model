@@ -1,6 +1,28 @@
 import librosa
 from torch.utils.data import Dataset
 
+def load_data(file_path):
+    """
+    Load data from file with UTF-8 encoding.
+    Parse lines as path|word|label
+
+    Args:
+        file_path: Path to the data file
+
+    Returns:
+        List of tuples (path, word, label)
+    """
+    data = []
+    with open(file_path, 'r', encoding='utf-8') as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                parts = line.split('|')
+                if len(parts) == 3:
+                    path, word, label = parts
+                    data.append((path, word, float(label)))
+    return data
+
 class BanglaDataset(Dataset):
     def __init__(self, data_list):
         """
