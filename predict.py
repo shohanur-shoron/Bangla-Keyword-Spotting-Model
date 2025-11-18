@@ -1,6 +1,8 @@
 import torch
 import librosa
 from model import BanglaKeywordSpotter
+import argparse
+import os
 
 def load_model(model_path):
     """
@@ -53,26 +55,31 @@ def predict_keyword(audio_path, keyword, model, threshold=0.5):
     return logit.item(), probability, prediction
 
 def main():
+    parser = argparse.ArgumentParser(description="Predict a keyword in a Bangla audio file.")
+    parser.add_argument('--audio_file', type=str, required=True, help='Path to the audio file.')
+    parser.add_argument('--keyword', type=str, required=True, help='The Bengali keyword to detect.')
+    parser.add_argument('--model_path', type=str, default='bangla_kws_model.pth', help='Path to the trained model.')
+    parser.add_argument('--threshold', type=float, default=0.5, help='Threshold for classification.')
+    args = parser.parse_args()
+
+    if not os.path.exists(args.model_path):
+        print(f"Error: Model file not found at '{args.model_path}'")
+        return
+
+    if not os.path.exists(args.audio_file):
+        print(f"Error: Audio file not found at '{args.audio_file}'")
+        return
+
     # Load the trained model
-    model = load_model('bangla_kws_model.pth')
+    model = load_model(args.model_path)
     
-    # Example usage
-    audio_file = input("Enter the path to the audio file: ")
-    keyword = input("Enter the keyword to detect: ")
+    logit, probability, prediction = predict_keyword(args.audio_file, args.keyword, model, args.threshold)
     
-    logit, probability, prediction = predict_keyword(audio_file, keyword, model)
-    
-    print(f"\nResults for audio: {audio_file}")
-    print(f"Keyword: {keyword}")
+    print(f"\nResults for audio: {args.audio_file}")
+    print(f"Keyword: {args.keyword}")
     print(f"Logit: {logit:.4f}")
     print(f"Probability: {probability:.4f}")
     print(f"Prediction: {'Present' if prediction == 1 else 'Not Present'}")
-    
-    # You can also use it programmatically like this:
-    # audio_path = "path/to/your/audio.wav"
-    # keyword = "আপনি"
-    # logit, probability, prediction = predict_keyword(audio_path, keyword, model)
-    # print(f"Keyword '{keyword}' is {'present' if prediction == 1 else 'not present'} in the audio.")
 
 if __name__ == "__main__":
     main()
