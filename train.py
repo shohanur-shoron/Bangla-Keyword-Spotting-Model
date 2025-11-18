@@ -70,13 +70,14 @@ def main():
             optimizer.zero_grad()
             outputs = model(audios, words)
             labels = labels.to(device)
-            loss = criterion(outputs.squeeze(), labels)
+            # Fix tensor shapes for loss calculation
+            loss = criterion(outputs.view(-1, 1), labels.view(-1, 1))
             loss.backward()
             optimizer.step()
             total_loss += loss.item()
 
             # Store predictions and labels for metrics
-            preds = torch.sigmoid(outputs).detach().cpu().numpy()
+            preds = torch.sigmoid(outputs).detach().cpu().numpy().flatten()
             all_train_preds.extend(preds)
             all_train_labels.extend(labels.cpu().numpy())
 
@@ -95,7 +96,7 @@ def main():
             with torch.no_grad():
                 for audios, words, labels in val_loader:
                     outputs = model(audios, words)
-                    preds = torch.sigmoid(outputs).cpu().numpy()
+                    preds = torch.sigmoid(outputs).cpu().numpy().flatten()
                     all_val_preds.extend(preds)
                     all_val_labels.extend(labels.numpy())
 

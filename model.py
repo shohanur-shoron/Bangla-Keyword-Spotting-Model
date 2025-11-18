@@ -40,7 +40,8 @@ class BanglaKeywordSpotter(nn.Module):
         audio_outputs = self.audio_encoder(**audio_inputs)
         
         # Pooling Audio: (batch, time, 1024) -> (batch, 1024)
-        audio_pool = torch.mean(audio_outputs.last_hidden_state, dim=1)
+        # Changed from mean to max as requested
+        audio_pool, _ = torch.max(audio_outputs.last_hidden_state, dim=1)
         
         # Process Text
         text_inputs = self.tokenizer(text_words, return_tensors="pt", padding=True)
